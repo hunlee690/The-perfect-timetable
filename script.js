@@ -276,25 +276,37 @@ function resetAll() {
 // ===== PDF =====
 function downloadPDF() {
   const table = document.getElementById("finalTable");
-  if (!table) return alert("Build or Generate timetable first!");
+  if (!table) {
+    alert("Build or Generate timetable first!");
+    return;
+  }
+
+  // Ask user for file name
+  let fileName = prompt("Enter file name for the timetable:", "My_Timetable");
+  if (!fileName) return;
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: "landscape" });
 
-  doc.text("Class × Period Teacher Timetable", 14, 14);
+  // Title
+  doc.setFontSize(16);
+  doc.text(fileName, 14, 15);
 
-  let y = 24;
-  for (let i = 0; i < table.rows.length; i++) {
-    let rowText = "";
-    for (let j = 0; j < table.rows[i].cells.length; j++) {
-      rowText += table.rows[i].cells[j].innerText.replace(/\s+/g, " ").trim() + " | ";
+  // Convert HTML table into autoTable
+  doc.autoTable({
+    html: "#finalTable",
+    startY: 25,
+    theme: "grid",
+    styles: {
+      halign: "center",
+      valign: "middle"
+    },
+    headStyles: {
+      fillColor: [0, 123, 255]  // blue header
     }
-    if (y > 190) { doc.addPage(); y = 14; }
-    doc.text(rowText, 14, y);
-    y += 8;
-  }
+  });
 
-  doc.save("class_period_timetable.pdf");
+  doc.save(fileName + ".pdf");
 }
 
 // ===== Rebuild grid if visible =====
