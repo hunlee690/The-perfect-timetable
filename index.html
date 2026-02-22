@@ -1,25 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Class × Period Teacher Timetable</title>
+
   <link rel="stylesheet" href="style.css">
 
-  <!-- jsPDF CDN -->
+  <!-- jsPDF Core -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- jsPDF AutoTable Plugin (for real table export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
+
   <h1>🏫 Class × Period Teacher Timetable</h1>
   <p class="subtitle">
-    Rows = Classes • Columns = Periods • One teacher cannot teach two classes in the same period
+    Rows = Classes • Columns = Periods • Teachers cannot teach two classes in the same period
   </p>
 
   <div class="container">
 
-    <!-- Teachers -->
+    <!-- Teachers Section -->
     <div class="card">
       <h2>👨‍🏫 Teachers</h2>
       <div class="row">
@@ -29,7 +33,7 @@
       <ul id="teacherList"></ul>
     </div>
 
-    <!-- Classes -->
+    <!-- Classes Section -->
     <div class="card">
       <h2>🏷️ Classes</h2>
       <div class="row">
@@ -39,7 +43,7 @@
       <ul id="classList"></ul>
     </div>
 
-    <!-- Periods + ALL Buttons -->
+    <!-- Period Settings + All Buttons -->
     <div class="card">
       <h2>⏱️ Period Settings</h2>
 
@@ -52,7 +56,7 @@
         Auto-adjust row after manual change
       </label>
 
-      <!-- ✅ ALL BUTTONS TOGETHER -->
+      <!-- ALL MAIN BUTTONS -->
       <div class="btn-bar">
         <button class="btn build" onclick="buildGrid()">Build Timetable</button>
         <button class="btn generate" onclick="generateTimetable()">Generate Timetable</button>
@@ -61,14 +65,17 @@
       </div>
 
       <p class="hint">
-        Build = empty grid • Generate = auto-fill • Reset = clear all • PDF = download timetable
+        Build = empty grid • Generate = auto-fill • Reset = clear everything • PDF = save timetable
       </p>
     </div>
 
   </div>
 
+  <!-- Timetable Output -->
   <div id="gridArea"></div>
 
+  <!-- Your Main Script (MUST be last) -->
   <script src="script.js"></script>
+
 </body>
 </html>
