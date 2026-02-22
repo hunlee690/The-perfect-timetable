@@ -1,0 +1,69 @@
+body {
+    font-family: Arial;
+    background: #f4f6f8;
+    text-align: center;
+}
+
+h1 {
+    margin-top: 20px;
+}
+
+.form-container {
+    background: white;
+    padding: 20px;
+    width: 450px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+input {
+    margin: 5px;
+    padding: 6px;
+}
+
+button {
+    padding: 6px 10px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+}
+
+.generate-btn {
+    background: #007bff;
+    color: white;
+}
+
+.reset-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.pdf-btn {
+    background: #28a745;
+    color: white;
+}
+
+table {
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 10px;
+    width: 110px;
+    height: 50px;
+}
+
+th {
+    background: #007bff;
+    color: white;
+}
+
+.action-btn {
+    margin-left: 5px;
+    padding: 3px 6px;
+    font-size: 12px;
+}
