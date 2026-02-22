@@ -193,17 +193,20 @@ function generateTimetable() {
 function teacherSelect(cls, period, current) {
   let options = `<option value="">-- Select --</option>`;
   teachers.forEach(t => {
-    const busy = teacherBusyInPeriod(period, t, cls);
-    const disabled = (busy && t !== current) ? "disabled" : "";
     const selected = t === current ? "selected" : "";
-    const label = (busy && t !== current) ? `${t} (busy)` : t;
-
-    options += `<option value="${t}" ${selected} ${disabled}>${label}</option>`;
+    options += `<option value="${t}" ${selected}>${t}</option>`;
   });
 
   return `<select onchange="setAssignment('${cls}', ${period}, this.value)">
             ${options}
           </select>`;
+}
+function findClassUsingTeacherInPeriod(period, teacher, excludingClass) {
+  for (const cls of classes) {
+    if (cls === excludingClass) continue;
+    if (assignments[cls] && assignments[cls][period] === teacher) return cls;
+  }
+  return null;
 }
 
 // ===== Manual Set + Auto-Adjust =====
@@ -213,23 +216,31 @@ function setAssignment(cls, period, teacher) {
 
   ensureAssignmentMap(periods);
 
-  // conflict check
-  if (teacher && teacherBusyInPeriod(period, teacher, cls)) {
-    alert("Conflict: Teacher already teaching another class this period.");
+  const oldTeacherHere = assignments[cls][period] || "";
+
+  // If user cleared selection
+  if (!teacher) {
+    assignments[cls][period] = "";
+    if (autoAdjustEnabled()) autoFillRowForClass(cls, periods);
     buildGrid();
     return;
   }
 
-  assignments[cls][period] = teacher;
+  // Check if selected teacher is already used in same period
+  const otherClass = findClassUsingTeacherInPeriod(period, teacher, cls);
 
-  // Auto-adjust feature:
-  // When you set one cell, auto-fill remaining EMPTY periods in that same class (row)
-  // using valid teachers (no conflicts per period).
-  if (autoAdjustEnabled()) {
-    autoFillRowForClass(cls, periods);
+  if (otherClass) {
+    // SWAP teachers between cls and otherClass in same period
+    assignments[cls][period] = teacher;
+    assignments[otherClass][period] = oldTeacherHere; // may become "" if oldTeacherHere empty
+  } else {
+    // No conflict, normal assign
+    assignments[cls][period] = teacher;
   }
 
-  // rebuild updates other dropdowns in same period (busy/disabled)
+  // Optional auto-adjust: fill empty periods in this row after manual change
+  if (autoAdjustEnabled()) autoFillRowForClass(cls, periods);
+
   buildGrid();
 }
 
