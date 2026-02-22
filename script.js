@@ -1,141 +1,296 @@
-let subjects = [];
-let editingIndex = -1;
+let teachers = [];
+let classes = [];
+let assignments = {}; // assignments[class][period] = teacher
 
-function addOrUpdateSubject() {
-    let name = document.getElementById("subjectName").value;
-    let teacher = document.getElementById("teacherName").value;
-    let count = parseInt(document.getElementById("subjectCount").value);
+let editTeacherIndex = -1;
+let editClassIndex = -1;
 
-    if (!name || !teacher || !count) return;
+// ===== Helpers =====
+function trim(v) { return (v || "").trim(); }
 
-    if (editingIndex === -1) {
-        subjects.push({ name, teacher, count });
-    } else {
-        subjects[editingIndex] = { name, teacher, count };
-        editingIndex = -1;
+function getPeriodCount() {
+  const periods = parseInt(document.getElementById("periodCount").value);
+  return Number.isFinite(periods) ? periods : 0;
+}
+
+function ensureAssignmentMap(periods) {
+  classes.forEach(cls => {
+    if (!assignments[cls]) assignments[cls] = {};
+    for (let p = 1; p <= periods; p++) {
+      if (assignments[cls][p] === undefined) assignments[cls][p] = "";
     }
-
-    clearInputs();
-    renderSubjectList();
+  });
 }
 
-function renderSubjectList() {
-    let list = document.getElementById("subjectList");
-    list.innerHTML = "";
+// Rule: One teacher cannot teach two classes in the same period
+function teacherBusyInPeriod(period, teacher, excludingClass) {
+  for (const cls of classes) {
+    if (cls === excludingClass) continue;
+    if (assignments[cls] && assignments[cls][period] === teacher) return true;
+  }
+  return false;
+}
 
-    subjects.forEach((sub, index) => {
-        let li = document.createElement("li");
-        li.innerHTML = `
-            ${sub.name} - ${sub.teacher} (${sub.count})
-            <button class="action-btn" onclick="editSubject(${index})">Edit</button>
-            <button class="action-btn" onclick="deleteSubject(${index})">Delete</button>
-        `;
-        list.appendChild(li);
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function autoAdjustEnabled() {
+  const el = document.getElementById("autoAdjust");
+  return el ? el.checked : true;
+}
+
+// ===== Teachers CRUD =====
+function addOrUpdateTeacher() {
+  const val = trim(document.getElementById("teacherInput").value);
+  if (!val) return;
+
+  if (editTeacherIndex === -1) teachers.push(val);
+  else { teachers[editTeacherIndex] = val; editTeacherIndex = -1; }
+
+  document.getElementById("teacherInput").value = "";
+  renderLists();
+  rebuildIfVisible();
+}
+
+function editTeacher(i) {
+  document.getElementById("teacherInput").value = teachers[i];
+  editTeacherIndex = i;
+}
+
+function deleteTeacher(i) {
+  const removed = teachers[i];
+  teachers.splice(i, 1);
+
+  // Clear removed teacher from all assignments
+  Object.keys(assignments).forEach(cls => {
+    Object.keys(assignments[cls]).forEach(p => {
+      if (assignments[cls][p] === removed) assignments[cls][p] = "";
     });
+  });
+
+  renderLists();
+  rebuildIfVisible();
 }
 
-function editSubject(index) {
-    let sub = subjects[index];
-    document.getElementById("subjectName").value = sub.name;
-    document.getElementById("teacherName").value = sub.teacher;
-    document.getElementById("subjectCount").value = sub.count;
-    editingIndex = index;
+// ===== Classes CRUD =====
+function addOrUpdateClass() {
+  const val = trim(document.getElementById("classInput").value);
+  if (!val) return;
+
+  if (editClassIndex === -1) classes.push(val);
+  else {
+    const old = classes[editClassIndex];
+    classes[editClassIndex] = val;
+    assignments[val] = assignments[old] || {};
+    delete assignments[old];
+    editClassIndex = -1;
+  }
+
+  document.getElementById("classInput").value = "";
+  renderLists();
+  rebuildIfVisible();
 }
 
-function deleteSubject(index) {
-    subjects.splice(index, 1);
-    renderSubjectList();
+function editClass(i) {
+  document.getElementById("classInput").value = classes[i];
+  editClassIndex = i;
 }
 
-function clearInputs() {
-    document.getElementById("subjectName").value = "";
-    document.getElementById("teacherName").value = "";
-    document.getElementById("subjectCount").value = "";
+function deleteClass(i) {
+  const cls = classes[i];
+  classes.splice(i, 1);
+  delete assignments[cls];
+  renderLists();
+  rebuildIfVisible();
 }
 
+// ===== Render Lists =====
+function renderLists() {
+  const tList = document.getElementById("teacherList");
+  tList.innerHTML = "";
+  teachers.forEach((t, i) => {
+    tList.innerHTML += `
+      <li>${t}
+        <span>
+          <button class="small-btn small-edit" onclick="editTeacher(${i})">Edit</button>
+          <button class="small-btn small-del" onclick="deleteTeacher(${i})">Delete</button>
+        </span>
+      </li>`;
+  });
+
+  const cList = document.getElementById("classList");
+  cList.innerHTML = "";
+  classes.forEach((c, i) => {
+    cList.innerHTML += `
+      <li>${c}
+        <span>
+          <button class="small-btn small-edit" onclick="editClass(${i})">Edit</button>
+          <button class="small-btn small-del" onclick="deleteClass(${i})">Delete</button>
+        </span>
+      </li>`;
+  });
+}
+
+// ===== Build Empty Grid =====
+function buildGrid() {
+  const periods = getPeriodCount();
+  if (!periods || classes.length === 0) {
+    alert("Add classes and set number of periods first.");
+    return;
+  }
+
+  ensureAssignmentMap(periods);
+
+  let html = `<table id="finalTable"><tr><th>Class \\ Period</th>`;
+  for (let p = 1; p <= periods; p++) html += `<th>Period ${p}</th>`;
+  html += `</tr>`;
+
+  classes.forEach(cls => {
+    html += `<tr><td><b>${cls}</b></td>`;
+    for (let p = 1; p <= periods; p++) {
+      const current = assignments[cls][p] || "";
+      html += `<td>${teacherSelect(cls, p, current)}</td>`;
+    }
+    html += `</tr>`;
+  });
+
+  html += `</table>`;
+  document.getElementById("gridArea").innerHTML = html;
+}
+
+// ===== Generate Full Timetable =====
+function generateTimetable() {
+  const periods = getPeriodCount();
+  if (!periods || classes.length === 0 || teachers.length === 0) {
+    alert("Add teachers + classes and set number of periods first.");
+    return;
+  }
+
+  // clean generate
+  assignments = {};
+  ensureAssignmentMap(periods);
+
+  // For each period, assign unique teachers to classes where possible.
+  // If teachers < classes, remaining cells stay empty (still valid).
+  for (let p = 1; p <= periods; p++) {
+    const shuffled = shuffle(teachers);
+    for (let i = 0; i < classes.length; i++) {
+      const cls = classes[i];
+      assignments[cls][p] = shuffled[i] || ""; // may be empty if not enough teachers
+    }
+  }
+
+  buildGrid();
+}
+
+// ===== Dropdown (conflict-aware) =====
+function teacherSelect(cls, period, current) {
+  let options = `<option value="">-- Select --</option>`;
+  teachers.forEach(t => {
+    const busy = teacherBusyInPeriod(period, t, cls);
+    const disabled = (busy && t !== current) ? "disabled" : "";
+    const selected = t === current ? "selected" : "";
+    const label = (busy && t !== current) ? `${t} (busy)` : t;
+
+    options += `<option value="${t}" ${selected} ${disabled}>${label}</option>`;
+  });
+
+  return `<select onchange="setAssignment('${cls}', ${period}, this.value)">
+            ${options}
+          </select>`;
+}
+
+// ===== Manual Set + Auto-Adjust =====
+function setAssignment(cls, period, teacher) {
+  const periods = getPeriodCount();
+  if (!periods) return;
+
+  ensureAssignmentMap(periods);
+
+  // conflict check
+  if (teacher && teacherBusyInPeriod(period, teacher, cls)) {
+    alert("Conflict: Teacher already teaching another class this period.");
+    buildGrid();
+    return;
+  }
+
+  assignments[cls][period] = teacher;
+
+  // Auto-adjust feature:
+  // When you set one cell, auto-fill remaining EMPTY periods in that same class (row)
+  // using valid teachers (no conflicts per period).
+  if (autoAdjustEnabled()) {
+    autoFillRowForClass(cls, periods);
+  }
+
+  // rebuild updates other dropdowns in same period (busy/disabled)
+  buildGrid();
+}
+
+function autoFillRowForClass(cls, periods) {
+  for (let p = 1; p <= periods; p++) {
+    // only fill empty
+    if (assignments[cls][p]) continue;
+
+    // choose an available teacher for this period
+    const choices = shuffle(teachers).filter(t => !teacherBusyInPeriod(p, t, cls));
+
+    // If no teacher available, leave blank
+    assignments[cls][p] = choices[0] || "";
+  }
+}
+
+// ===== Reset =====
 function resetAll() {
-    subjects = [];
-    editingIndex = -1;
-    document.getElementById("timetable").innerHTML = "";
-    renderSubjectList();
-    clearInputs();
+  teachers = [];
+  classes = [];
+  assignments = {};
+  editTeacherIndex = -1;
+  editClassIndex = -1;
+
+  document.getElementById("teacherInput").value = "";
+  document.getElementById("classInput").value = "";
+  document.getElementById("periodCount").value = "";
+  document.getElementById("gridArea").innerHTML = "";
+
+  renderLists();
 }
 
-function generateSchedule() {
-
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const periodsPerDay = parseInt(document.getElementById("periods").value);
-
-    let schedule = Array.from({ length: periodsPerDay }, () =>
-        Array(days.length).fill("")
-    );
-
-    let subjectPool = [];
-
-    subjects.forEach(sub => {
-        for (let i = 0; i < sub.count; i++) {
-            subjectPool.push(sub);
-        }
-    });
-
-    subjectPool.sort(() => Math.random() - 0.5);
-
-    let index = 0;
-
-    for (let p = 0; p < periodsPerDay; p++) {
-        for (let d = 0; d < days.length; d++) {
-            if (index < subjectPool.length) {
-                let sub = subjectPool[index];
-                schedule[p][d] = `${sub.name}\n${sub.teacher}`;
-                index++;
-            }
-        }
-    }
-
-    displaySchedule(schedule, days, periodsPerDay);
-}
-
-function displaySchedule(schedule, days, periods) {
-
-    let html = "<table id='scheduleTable'>";
-    html += "<tr><th>Period</th>";
-
-    days.forEach(day => html += `<th>${day}</th>`);
-    html += "</tr>";
-
-    for (let i = 0; i < periods; i++) {
-        html += `<tr><td>Period ${i + 1}</td>`;
-        for (let j = 0; j < days.length; j++) {
-            html += `<td>${schedule[i][j]}</td>`;
-        }
-        html += "</tr>";
-    }
-
-    html += "</table>";
-    document.getElementById("timetable").innerHTML = html;
-}
-
+// ===== PDF =====
 function downloadPDF() {
+  const table = document.getElementById("finalTable");
+  if (!table) return alert("Build or Generate timetable first!");
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape" });
 
-    let table = document.getElementById("scheduleTable");
-    if (!table) return alert("Generate timetable first!");
+  doc.text("Class × Period Teacher Timetable", 14, 14);
 
-    doc.text("School Timetable", 14, 15);
-
-    let rows = table.rows;
-    let y = 25;
-
-    for (let i = 0; i < rows.length; i++) {
-        let rowText = "";
-        for (let j = 0; j < rows[i].cells.length; j++) {
-            rowText += rows[i].cells[j].innerText + " | ";
-        }
-        doc.text(rowText, 14, y);
-        y += 10;
+  let y = 24;
+  for (let i = 0; i < table.rows.length; i++) {
+    let rowText = "";
+    for (let j = 0; j < table.rows[i].cells.length; j++) {
+      rowText += table.rows[i].cells[j].innerText.replace(/\s+/g, " ").trim() + " | ";
     }
+    if (y > 190) { doc.addPage(); y = 14; }
+    doc.text(rowText, 14, y);
+    y += 8;
+  }
 
-    doc.save("timetable.pdf");
+  doc.save("class_period_timetable.pdf");
 }
+
+// ===== Rebuild grid if visible =====
+function rebuildIfVisible() {
+  const table = document.getElementById("finalTable");
+  if (table) buildGrid();
+}
+
+// init
+renderLists();

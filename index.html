@@ -1,38 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>School Timetable Generator</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- jsPDF CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <title>Class × Period Teacher Timetable</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+
 <body>
+  <h1>🏫 Class × Period Teacher Timetable</h1>
+  <p class="subtitle">
+    Rows = Classes • Columns = Periods • One teacher cannot teach two classes in the same period
+  </p>
 
-<h1>School Timetable Generator</h1>
+  <div class="container">
 
-<div class="form-container">
+    <!-- Teachers -->
+    <div class="card">
+      <h2>👨‍🏫 Teachers</h2>
+      <div class="row">
+        <input id="teacherInput" type="text" placeholder="Teacher Name">
+        <button class="small-primary" onclick="addOrUpdateTeacher()">Add / Update</button>
+      </div>
+      <ul id="teacherList"></ul>
+    </div>
 
-    <label>Periods Per Day:</label>
-    <input type="number" id="periods" value="6">
+    <!-- Classes -->
+    <div class="card">
+      <h2>🏷️ Classes</h2>
+      <div class="row">
+        <input id="classInput" type="text" placeholder="Class Name (e.g., 6A)">
+        <button class="small-primary" onclick="addOrUpdateClass()">Add / Update</button>
+      </div>
+      <ul id="classList"></ul>
+    </div>
 
-    <h3>Add Subject</h3>
-    <input type="text" id="subjectName" placeholder="Subject Name">
-    <input type="text" id="teacherName" placeholder="Teacher Name">
-    <input type="number" id="subjectCount" placeholder="Times Per Week">
+    <!-- Periods + ALL Buttons -->
+    <div class="card">
+      <h2>⏱️ Period Settings</h2>
 
-    <button onclick="addOrUpdateSubject()">Add / Update</button>
+      <div class="row">
+        <input id="periodCount" type="number" min="1" placeholder="Number of Periods">
+      </div>
 
-    <ul id="subjectList"></ul>
+      <label class="toggle">
+        <input type="checkbox" id="autoAdjust" checked>
+        Auto-adjust row after manual change
+      </label>
 
-    <button class="generate-btn" onclick="generateSchedule()">Generate Timetable</button>
-    <button class="reset-btn" onclick="resetAll()">Refresh / Reset</button>
-    <button class="pdf-btn" onclick="downloadPDF()">Download PDF</button>
+      <!-- ✅ ALL BUTTONS TOGETHER -->
+      <div class="btn-bar">
+        <button class="btn build" onclick="buildGrid()">Build Timetable</button>
+        <button class="btn generate" onclick="generateTimetable()">Generate Timetable</button>
+        <button class="btn reset" onclick="resetAll()">Reset</button>
+        <button class="btn pdf" onclick="downloadPDF()">Download PDF</button>
+      </div>
 
-</div>
+      <p class="hint">
+        Build = empty grid • Generate = auto-fill • Reset = clear all • PDF = download timetable
+      </p>
+    </div>
 
-<div id="timetable"></div>
+  </div>
 
-<script src="script.js"></script>
+  <div id="gridArea"></div>
+
+  <script src="script.js"></script>
 </body>
 </html>
