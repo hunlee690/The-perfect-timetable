@@ -16,63 +16,117 @@
 
 <body>
 
-  <h1>🏫 Class × Period Teacher Timetable</h1>
-  <p class="subtitle">
-    Rows = Classes • Columns = Periods • Teachers cannot teach two classes in the same period
-  </p>
-
-  <div class="container">
-
-    <!-- Teachers Section -->
-    <div class="card">
-      <h2>👨‍🏫 Teachers</h2>
-      <div class="row">
-        <input id="teacherInput" type="text" placeholder="Teacher Name">
-        <button class="small-primary" onclick="addOrUpdateTeacher()">Add / Update</button>
-      </div>
-      <ul id="teacherList"></ul>
-    </div>
-
-    <!-- Classes Section -->
-    <div class="card">
-      <h2>🏷️ Classes</h2>
-      <div class="row">
-        <input id="classInput" type="text" placeholder="Class Name (e.g., 6A)">
-        <button class="small-primary" onclick="addOrUpdateClass()">Add / Update</button>
-      </div>
-      <ul id="classList"></ul>
-    </div>
-
-    <!-- Period Settings + All Buttons -->
-    <div class="card">
-      <h2>⏱️ Period Settings</h2>
-
-      <div class="row">
-        <input id="periodCount" type="number" min="1" placeholder="Number of Periods">
-      </div>
-
-      <label class="toggle">
-        <input type="checkbox" id="autoAdjust" checked>
-        Auto-adjust row after manual change
-      </label>
-
-      <!-- ALL MAIN BUTTONS -->
-      <div class="btn-bar">
-        <button class="btn build" onclick="buildGrid()">Build Timetable</button>
-        <button class="btn generate" onclick="generateTimetable()">Generate Timetable</button>
-        <button class="btn reset" onclick="resetAll()">Reset</button>
-        <button class="btn pdf" onclick="downloadPDF()">Download PDF</button>
-      </div>
-
-      <p class="hint">
-        Build = empty grid • Generate = auto-fill • Reset = clear everything • PDF = save timetable
+  <main class="app-shell">
+    <section class="hero">
+      <div class="hero-badge">Smart School Scheduler</div>
+      <h1>Class × Period Teacher Timetable</h1>
+      <p class="subtitle">
+        Create, auto-generate, edit, save in browser, and export your timetable as PDF.
       </p>
-    </div>
 
-  </div>
+      <div class="feature-strip" aria-label="Main app features">
+        <span>Auto Save</span>
+        <span>No double-booking</span>
+        <span>PDF Export</span>
+        <span>Bulk Classes</span>
+      </div>
+    </section>
 
-  <!-- Timetable Output -->
-  <div id="gridArea"></div>
+    <section class="container" aria-label="Timetable controls">
+
+      <!-- Teachers Section -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <p class="eyebrow">Step 1</p>
+            <h2>Teachers</h2>
+          </div>
+          <span class="card-icon">👨‍🏫</span>
+        </div>
+
+        <div class="row input-row">
+          <input id="teacherInput" type="text" placeholder="Teacher name">
+          <button class="small-primary" onclick="addOrUpdateTeacher()">Add / Update</button>
+        </div>
+
+        <ul id="teacherList" class="clean-list"></ul>
+      </div>
+
+      <!-- Classes Section -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <p class="eyebrow">Step 2</p>
+            <h2>Classes</h2>
+          </div>
+          <span class="card-icon">🏷️</span>
+        </div>
+
+        <div class="row input-row">
+          <input id="classInput" type="text" placeholder="Class name e.g. 6A">
+          <button class="small-primary" onclick="addOrUpdateClass()">Add / Update</button>
+        </div>
+
+        <div class="bulk-class-box">
+          <p class="mini-label">Create classes automatically</p>
+          <div class="row input-row">
+            <input id="classCountInput" type="number" min="1" max="100" placeholder="Number of classes">
+            <button class="small-primary bulk" onclick="createNumberedClasses()">Create Classes</button>
+          </div>
+          <p class="hint small-hint">Example: 10 creates Class 1 to Class 10.</p>
+        </div>
+
+        <ul id="classList" class="clean-list"></ul>
+      </div>
+
+      <!-- Period Settings + All Buttons -->
+      <div class="card control-card">
+        <div class="card-header">
+          <div>
+            <p class="eyebrow">Step 3</p>
+            <h2>Build Timetable</h2>
+          </div>
+          <span class="card-icon">⏱️</span>
+        </div>
+
+        <div class="row input-row">
+          <input id="periodCount" type="number" min="1" placeholder="Number of periods">
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="autoAdjust" checked>
+          <span>Auto-adjust row after manual change</span>
+        </label>
+
+        <!-- ALL MAIN BUTTONS -->
+        <div class="btn-bar">
+          <button class="btn build" onclick="buildGrid()">Create Empty</button>
+          <button class="btn generate" onclick="generateTimetable()">Auto Generate</button>
+          <button class="btn save" onclick="saveToBrowser()">Save Progress</button>
+          <button class="btn load" onclick="loadFromBrowser()">Restore</button>
+          <button class="btn clear-save" onclick="clearBrowserSave()">Clear Save</button>
+          <button class="btn reset" onclick="resetAll()">Reset Page</button>
+          <button class="btn pdf" onclick="downloadPDF()">Export PDF</button>
+        </div>
+
+        <p id="saveStatus" class="save-status"></p>
+
+        <p class="hint">
+          Saved data stays in this browser so you can come back and edit later.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- Timetable Output -->
+    <section id="gridArea" class="grid-area">
+      <div class="empty-state">
+        <div class="empty-icon">📅</div>
+        <h3>No timetable yet</h3>
+        <p>Add teachers, create classes, set periods, then build or auto-generate your timetable.</p>
+      </div>
+    </section>
+  </main>
 
   <!-- Your Main Script (MUST be last) -->
   <script src="script.js"></script>
